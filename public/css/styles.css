@@ -1,0 +1,49 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+  }
+  html {
+    font-family: "Montserrat", sans-serif;
+  }
+  body {
+    background: #eee;
+    padding: 0 16px;
+    overflow-x:hidden;
+    background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
+  }
+  
+  
+  .container{
+    display: flex;
+    justify-content: center;
+  }
+
+  .centered {
+
+    text-align: center;
+}
+.card-body{
+    width:30vw;
+}
+
+.order{
+    width:50vw;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  th, td {
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+  }
+
+  th {
+    background-color: #f2f2f2;
+  }
+
+  

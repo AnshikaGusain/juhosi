@@ -1,0 +1,46 @@
+  <%- include('partials/header') %>
+  <h2 class="centered m-3 p-3">Customer Orders</h2>
+  <table class="p-3">
+    <tr>
+      <th>Item/Customer</th>
+      <th>Customer1</th>
+      <th>Customer2</th>
+      <th>Total</th>
+    </tr>
+    <% let customer1Quantity=0, customer2Quantity=0, customer1Weight=0, customer2Weight=0, customer1BoxCount=0, customer2BoxCount=0 %>
+    <% customerData.forEach(function(row) { %>
+      <%
+          if(row.customerId==="customer1"){
+            customer1Quantity+=parseInt(row.quantity);
+            customer1BoxCount+=parseInt(row.boxCount);
+            customer1Weight+=parseFloat(row.weight);
+          }
+          if(row.customerId==="customer2"){
+            customer2Quantity+=parseInt(row.quantity);
+            customer2BoxCount+=parseInt(row.boxCount);
+            customer2Weight+=parseFloat(row.weight);
+          }
+
+      %>
+      <% }); %>
+      <tr>
+        <td>Quantity</td>
+        <td><%= customer1Quantity %></td>
+        <td><%= customer2Quantity %></td>
+        <td><%= customer1Quantity+customer2Quantity  %></td>
+      </tr>
+      <tr>
+        <td>Weight</td>
+        <td><%= customer2Weight %></td>
+        <td><%= customer1Weight %></td>
+        <td><%= customer1Weight+customer2Weight  %></td>
+      </tr>
+      <tr>
+        <td>BoxCount</td>
+        <td><%= customer1BoxCount %></td>
+        <td><%= customer2BoxCount %></td>
+        <td><%= customer1BoxCount+customer2BoxCount  %></td>
+      </tr>
+  </table>
+
+  <%- include('partials/footer') %>
