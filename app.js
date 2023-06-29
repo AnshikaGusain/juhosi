@@ -2,7 +2,7 @@ const express = require('express');
 const mysql = require('mysql2');
 const ejs = require("ejs");
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT+1;
 const dotenv = require("dotenv");
 const fs = require('fs');
 const path = require('path');
@@ -219,6 +219,6 @@ app.get('/download-details', (req, res) => {
 
 
 
-app.listen(port, () => {
+app.listen(port || 3001, () => {
   console.log(`Server is running on port ${port}`);
 });
