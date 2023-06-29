@@ -1,13 +1,15 @@
 <%- include('partials/header') %>
 
-<div class="container mt-5">
-  <div class="row">
-      <div class="card">
-          <div class="card-body">
-            <h1 class="centered">Login</h1>  
-
-          <!-- Makes POST request to /login route -->
-              <form action="/login" method="POST">
+<div class="container-fluid">
+  <!-- <div class="row"> -->
+    <!-- <div class="col-sm-12 col-md-10 col-lg-6"> -->
+          <div class="mt-5 login-container">
+          <h1 class="centered">Login</h1>
+          <% if (typeof msg !== 'undefined') { %>
+            <p class="msg"><%= msg %></p>
+          <% } %>
+          
+          <form action="/login" method="POST">
             <div class="form-group">
               <label for="email">ID</label>
               <input type="text" class="form-control" name="username">
@@ -17,11 +19,11 @@
               <input type="password" class="form-control" name="password">
             </div>
             <button type="submit" class="btn btn-dark">Login</button>
-              </form>
-
-          </div>
-      </div>
+            <button type="submit" class="btn btn-dark" name="changePassword" value="true">Change Password</button>
+          </form>
+        </div>
+      <!-- </div> -->
+    <!-- </div> -->
   </div>
-</div>
 
-<%- include('partials/footer') %>
+  <%- include('partials/footer') %>

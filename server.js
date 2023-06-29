@@ -3,7 +3,10 @@ const mysql = require('mysql2');
 const ejs = require("ejs");
 const app = express();
 const port = 3000;
-const dotenv=require("dotenv");
+const dotenv = require("dotenv");
+const fs = require('fs');
+const path = require('path');
+const json2csv = require('json2csv').parse;
 dotenv.config();
 
 app.set("view engine", "ejs");
@@ -11,95 +14,211 @@ app.use(express());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-// Create a MySQL connection
 const connection = mysql.createConnection({
   host: process.env.HOST,
+  port: process.env.PORT,
   user: process.env.USER,
   password: process.env.PASSWORD,
-  database: process.env.DATABASE
+  database: process.env.DATABASE,
 });
 
 // Connect to the database
-let user="";
 connection.connect((err) => {
   if (err) {
-    console.error('Error connecting to the database: ', err);
+    console.error('Error connecting to the database:', err);
     return;
   }
   console.log('Connected to the database');
 });
 
-// Configure body parser middleware to parse the request body
-// app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+// Create a route for the login form
+app.get('/', (req, res) => {
+  res.render('login');
+});
 
+let user = {
+  id: "",
+  name: ""
+};
 
-app.get("/", (req, res) => {
-  res.render("login");
+app.post('/login', (req, res) => {
+  const { username, password, newPassword, changePassword } = req.body;
+
+  // Check if the "Change Password" button is clicked
+  if (changePassword) {
+    res.render('changePassword');
+  }
+
+  // Handle the login logic here
+  // You can check the username and password against the database and validate the user
+  // You can use the same MySQL connection object to perform the query
+
+  // Example query (replace with your actual query):
+  connection.query('SELECT * FROM User WHERE id = ? AND BINARY password = ?', [username, password], (err, results) => {
+    if (err) {
+      console.error('Error checking login:', err);
+    } else {
+      if (results.length > 0) {
+        user = {
+          id: results[0].id,
+          name: results[0].name
+        };
+        // Successful login, redirect to the dashboard or another page
+        res.render("orderForm", { result: results[0] });
+      } else {
+        // Invalid credentials, display an error message
+
+        res.render('login', { msg: 'Invalid username or password' });
+      }
+
+    }
+  });
+
+});
+
+app.post('/updatePassword', (req, res) => {
+  const { mobileNo, newPassword, confirmPassword } = req.body;
+  connection.query('SELECT * FROM User WHERE phone_number = ?', [mobileNo], (err, results) => {
+    if (err) {
+      return res.render('changePassword', { msg: "Error in checking mobile number" });
+    }
+    else {
+      if (newPassword !== confirmPassword) {
+        return res.render('changePassword', { msg: "Passwords do not match" });
+      }
+      if (results.length === 0) {
+        return res.render('changePassword', { msg: "Mobile number does not exist" });
+      }
+      else {
+        connection.query('UPDATE User SET password = ? WHERE phone_number = ?', [newPassword, mobileNo], (err, updateResults) => {
+          if (err) {
+            console.error('Error updating password:', err);
+            return res.render('changePassword', { msg: 'Error updating password' });
+          }
+
+          return res.render('login', { msg: 'Password updated successfully' });
+        });
+      }
+    }
+  });
 })
 
-// Handle POST request to /login endpoint
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  user=username;
 
-  // Check the username and password from the database
-  const sql = `SELECT * FROM auth WHERE id = ? AND password = ?`;
-  connection.query(sql, [username, password], (err, results) => {
-    if (err) {
-      console.error('Error executing the SQL query: ', err);
-      return res.status(500).send('Internal Server Error');
-    }
-
-    if (results.length === 0) {
-      // Invalid login credentials
-      return res.status(401).send('Invalid username or password');
-    }
-
-    if (username === "admin") {
-      // Admin login
-      const fetchSql = `SELECT * FROM customer`;
-      connection.query(fetchSql, (err, customerData) => {
-        if (err) {
-          console.error('Error retrieving data from the table: ', err);
-          return res.status(500).send('Internal Server Error');
-        }
-        // Render the data as a table
-        return res.render('admin.ejs', { customerData });
-      });
-    } 
-    else if (username === 'customer1' || username === 'customer2') {
-      // Customer login
-      return res.render('orders.ejs');
-    }
-    else{
-      // Invalid user role
-      return res.status(401).send('Unauthorized');
-    }
-
-  });
-});
-
-// Handle POST request to /submitOrder endpoint
 app.post('/submitOrder', (req, res) => {
-  let customerId=user;
-  const {orderDate, company, owner, item, quantity, weight, shipmentRequest, trackingId, shipmentSize, boxCount, specification, checklistQuantity } = req.body;
-
-  // Insert the order into the customer table
-  const sql = `INSERT INTO customer (customerId, orderDate, company, owner, item, quantity, weight, shipmentRequest, trackingId, shipmentSize, boxCount, specification, checklistQuantity) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-  const values = [customerId, orderDate, company, owner, item, quantity, weight, shipmentRequest, trackingId, shipmentSize, boxCount, specification, checklistQuantity];
-  connection.query(sql, values, (err, result) => {
+  const { orderDate, count, item, weight, requests } = req.body;
+  // let orderDateTime=orderDate+time;
+  let prodId, orderId;
+  connection.query('SELECT id FROM ProductInfo WHERE species=?', [item], (err, r1) => {
     if (err) {
-      console.error('Error inserting data into the table: ', err);
-      return res.status(500).send('Internal Server Error');
+      res.render('orderForm', { msg: "Item does not exists" });
+    }
+    else {
+      prodId = r1[0].id;
+      connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id=?`, [user.id], (err, r2) => {
+        if (err) {
+          res.render('orderForm', { msg: 'Order does not exist', result: user });
+        }
+        else {
+          orderId = r2[0].id;
+          connection.query('INSERT INTO OrderItem(orderDate,package,request_weight,productId,order_id) VALUES (?, ?,?,?,?)', [orderDate, item, weight, prodId, orderId], (err, results) => {
+            if (err) {
+              console.error('Error placing order:', err);
+              res.render('orderForm', { msg: 'Error placing order', result: user });
+            } else {
+              res.render('orderForm', { msg: 'Order placed successfully', result: user });
+            }
+
+          });
+        }
+
+      })
     }
 
-    // Order successfully inserted
-    return res.status(200).send('Order submitted successfully');
+  })
+});
+
+
+
+app.get('/view-order-details', (req, res) => {
+  connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id = ?`, [user.id], (err, results) => {
+    if (err) {
+      console.error('Error retrieving order details:', err);
+      res.render('orderForm', { msg: 'Error retrieving order details' });
+    } else {
+      connection.query("SELECT * FROM OrderItem WHERE order_id=?", [results[0].id], (err, orderDetails) => {
+        res.render("orderDetails", { orderDetails, user });
+      })
+    }
   });
 });
 
-// Start the server
+
+const downloadsDir = path.join(__dirname, 'downloads');
+if (!fs.existsSync(downloadsDir)) {
+  fs.mkdirSync(downloadsDir);
+}
+
+app.get('/download-details', (req, res) => {
+  connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id = ?`, [user.id], (err, results) => {
+    if (err) {
+      console.error('Error retrieving order details:', err);
+      res.render('orderForm', { msg: 'Error retrieving order details' });
+    } else {
+      let detail = {
+        orderDate: "",
+        userId: "",
+        userName: "",
+        package: "",
+        request_weight: ""
+      };
+      let details = [];
+      connection.query("SELECT * FROM OrderItem WHERE order_id=?", [results[0].id], (err, orderDetails) => {
+        orderDetails.forEach(element => {
+          detail = {
+            orderDate: element.orderDate,
+            userId: user.id,
+            userName: user.name,
+            package: element.package,
+            request_weight: element.request_weight
+          };
+          details.push(detail);
+
+          const csvData = json2csv(details);
+
+          const filename = `order_details_${Date.now()}.csv`;
+          const filePath = path.join(downloadsDir, filename);
+
+          fs.writeFile(filePath, csvData, 'utf8', (err) => {
+            if (err) {
+              console.error('Error writing CSV file:', err);
+              res.status(500).send('Error exporting order details');
+            } else {
+              res.download(filePath, filename, (err) => {
+                // if (err) {
+                //   console.error('Error sending file:', err);
+                //   res.status(500).send('Error exporting order details');
+                // }
+    
+                // Remove the file after it's downloaded
+                fs.unlink(filePath, (err) => {
+                  // if (err) {
+                  //   console.error('Error removing file:', err);
+                  // }
+                });
+              });
+            }
+          });
+
+        });
+      })
+      
+    }
+  });
+  // downloadLink.click();
+})
+
+
+
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

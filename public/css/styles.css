@@ -1,37 +1,47 @@
-* {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
+body{
+  background-color: #a88c8c;
+background-image: url("https://www.transparenttextures.com/patterns/diamond-upholstery.png");
+font-family: 'Roboto', sans-serif;
+}
+
+.container-fluid{
+  display:flex;
+  justify-content:center;
+  align-items: center;
+  /* width:100vw; */
+  /* height:100vh; */
+}
+.login-container,.order-container,.detail-container {
+    position:relative;
+    width: 50%;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: rgba(34, 29, 29, 0.4);
+    border-radius: 5px;
+    color:white;
+    align-items: center;
+    overflow:hidden;
   }
-  html {
-    font-family: "Montserrat", sans-serif;
-  }
-  body {
-    background: #eee;
-    padding: 0 16px;
-    overflow-x:hidden;
-    background-image: url("https://www.transparenttextures.com/patterns/cubes.png");
-  }
-  
-  
-  .container{
-    display: flex;
-    justify-content: center;
+  .detail-container{
+    position: relative;
+    width:100%;
   }
 
-  .centered {
-
+  
+  h1 {
     text-align: center;
-}
-.card-body{
-    width:30vw;
-}
+  }
 
-.order{
-    width:50vw;
-}
+  .msg {
+    color: white;
+    font-weight:bolder;
+    margin-top: 10px;
+    border:2px solid white;
+    border-radius: 10px;
+    padding:10px;
+  }
 
-table {
+  table {
     border-collapse: collapse;
     width: 100%;
   }
@@ -41,9 +51,35 @@ table {
     text-align: left;
     border-bottom: 1px solid #ddd;
   }
-
-  th {
-    background-color: #f2f2f2;
+  .export-button,.orderDetails-button{
+    position:fixed;
+    top:0;
+    right:0;
+    margin:10px;
+    padding:6px;
+    
   }
 
+  /* th{
+    font-size:1.2rem;
+    font-weight: bolder;
+  } */
+  
+  /* form {
+    display: flex;
+    flex-direction: column;
+  } */
+  
+  /* label {
+    margin-bottom: 10px;
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  } */
+  
   

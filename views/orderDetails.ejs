@@ -1,0 +1,39 @@
+  <%- include('partials/header') %>
+  
+  
+  <div class="container-fluid mt-5">
+    <button class="export-button btn btn-dark" id="downloadButton">Export to Excel</button>
+    <div class="detail-container mt-2">
+      <h1 class="centered">Customer Orders</h1>
+      <table class="p-3">
+        <tr>
+          <th>OrderDate</th>
+          <th>User ID</th>
+          <th>User Name</th>
+          <th>Package</th>
+          <th>Request_Weight</th>
+        </tr>
+        <% orderDetails.forEach(function(row) { %>
+          <tr>
+            <td><%= row.orderDate %></td>
+            <td><%= user.id %></td>
+            <td><%= user.name %></td>
+            <td><%= row.package  %></td>
+            <td><%= row.request_weight  %></td>
+          </tr>
+          <% }); %>
+      </table>
+    </div>
+  </div>
+<script>
+  // Select the button element
+const downloadButton = document.getElementById('downloadButton');
+
+
+downloadButton.addEventListener('click', () => {
+  window.location.href="/download-details";
+});
+
+
+</script>
+  <%- include('partials/footer') %>
