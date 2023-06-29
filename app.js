@@ -222,6 +222,6 @@ app.get('/download-details', (req, res) => {
 
 
 
-app.listen(port || 3307, () => {
+app.listen(3307, () => {
   console.log(`Server is running on port ${port}`);
 });
