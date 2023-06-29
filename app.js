@@ -3,6 +3,9 @@ const mysql = require('mysql2');
 const ejs = require("ejs");
 const app = express();
 const port = process.env.PORT;
+if(port===3306){
+  port=3307;
+}
 const dotenv = require("dotenv");
 const fs = require('fs');
 const path = require('path');
@@ -16,7 +19,7 @@ app.use(express.static("public"));
 
 const connection = mysql.createConnection({
   host: process.env.HOST,
-  // port: process.env.PORT,
+  port: 3306,
   user: process.env.USER,
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
@@ -219,6 +222,6 @@ app.get('/download-details', (req, res) => {
 
 
 
-app.listen(port || 3001, () => {
+app.listen(port || 3307, () => {
   console.log(`Server is running on port ${port}`);
 });
