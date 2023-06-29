@@ -2,9 +2,15 @@ const express = require('express');
 const mysql = require('mysql2');
 const ejs = require("ejs");
 const app = express();
-const port = process.env.PORT;
-if(port===3306){
-  port=3307;
+const port = process.env.PORT || 3000; // Default port is 3000, but can be overridden by the environment variable PORT
+
+// Check if the port is 3306, if so, assign a different port
+if (port === 3306) {
+  console.log('Port 3306 is reserved. Assigning a different port...');
+  const alternativePort = 3001; // Specify the alternative port here
+  app.set('port', alternativePort);
+} else {
+  app.set('port', port);
 }
 const dotenv = require("dotenv");
 const fs = require('fs');
@@ -222,6 +228,6 @@ app.get('/download-details', (req, res) => {
 
 
 
-app.listen(3307, () => {
+app.listen(app.get('port'), () => {
   console.log(`Server is running on port ${port}`);
 });
