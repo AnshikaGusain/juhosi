@@ -42,6 +42,7 @@ connection.connect((err) => {
 
 // Create a route for the login form
 app.get('/', (req, res) => {
+  console.log("login");
   res.render('login');
 });
 
