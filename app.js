@@ -66,6 +66,7 @@ app.post('/login', (req, res) => {
   connection.query('SELECT * FROM User WHERE id = ? AND BINARY password = ?', [username, password], (err, results) => {
     if (err) {
       console.error('Error checking login:', err);
+      res.render('login',{msg:'Connection Problem'})
     } else {
       if (results.length > 0) {
         user = {
@@ -123,24 +124,15 @@ app.post('/submitOrder', (req, res) => {
     }
     else {
       prodId = r1[0].id;
-      connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id=?`, [user.id], (err, r2) => {
+      connection.query('INSERT INTO OrderItem(id,orderDate,package,request_weight,productId,requests) VALUES (?,?, ?,?,?,?)', [user.id,orderDate, item, weight, prodId,requests], (err, results) => {
         if (err) {
-          res.render('orderForm', { msg: 'Order does not exist', result: user });
-        }
-        else {
-          orderId = r2[0].id;
-          connection.query('INSERT INTO OrderItem(orderDate,package,request_weight,productId,order_id) VALUES (?, ?,?,?,?)', [orderDate, item, weight, prodId, orderId], (err, results) => {
-            if (err) {
-              console.error('Error placing order:', err);
-              res.render('orderForm', { msg: 'Error placing order', result: user });
-            } else {
-              res.render('orderForm', { msg: 'Order placed successfully', result: user });
-            }
-
-          });
+          console.error('Error placing order:', err);
+          res.render('orderForm', { msg: 'Error placing order', result: user });
+        } else {
+          res.render('orderForm', { msg: 'Order placed successfully', result: user });
         }
 
-      })
+      });
     }
 
   })
@@ -149,14 +141,12 @@ app.post('/submitOrder', (req, res) => {
 
 
 app.get('/view-order-details', (req, res) => {
-  connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id = ?`, [user.id], (err, results) => {
+  connection.query(`SELECT * FROM OrderItem WHERE id = ?`, [user.id], (err, orderDetails) => {
     if (err) {
       console.error('Error retrieving order details:', err);
       res.render('orderForm', { msg: 'Error retrieving order details' });
     } else {
-      connection.query("SELECT * FROM OrderItem WHERE order_id=?", [results[0].id], (err, orderDetails) => {
-        res.render("orderDetails", { orderDetails, user });
-      })
+      res.render("orderDetails", { orderDetails, user });
     }
   });
 });
@@ -168,61 +158,63 @@ if (!fs.existsSync(downloadsDir)) {
 }
 
 app.get('/download-details', (req, res) => {
-  connection.query(`SELECT id FROM ${process.env.DATABASE}.Order WHERE user_id = ?`, [user.id], (err, results) => {
-    if (err) {
-      console.error('Error retrieving order details:', err);
-      res.render('orderForm', { msg: 'Error retrieving order details' });
-    } else {
       let detail = {
         orderDate: "",
         userId: "",
         userName: "",
         package: "",
-        request_weight: ""
+        request_weight: "",
+        requests:""
       };
       let details = [];
-      connection.query("SELECT * FROM OrderItem WHERE order_id=?", [results[0].id], (err, orderDetails) => {
-        orderDetails.forEach(element => {
-          detail = {
-            orderDate: element.orderDate,
-            userId: user.id,
-            userName: user.name,
-            package: element.package,
-            request_weight: element.request_weight
-          };
-          details.push(detail);
+      connection.query("SELECT * FROM OrderItem WHERE id=?", [user.id], (err, orderDetails) => {
+        if(err){
+          res.render("orderDetails",{msg:"Error in downloading data"});
+        }
+        else{
+          orderDetails.forEach(element => {
+            detail = {
+              orderDate: element.orderDate,
+              userId: user.id,
+              userName: user.name,
+              package: element.package,
+              request_weight: element.request_weight,
+              requests:element.requests
+            };
+            details.push(detail);
+            
+            const csvData = json2csv(details);
 
-          const csvData = json2csv(details);
-
-          const filename = `order_details_${Date.now()}.csv`;
-          const filePath = path.join(downloadsDir, filename);
-
-          fs.writeFile(filePath, csvData, 'utf8', (err) => {
-            if (err) {
-              console.error('Error writing CSV file:', err);
-              res.status(500).send('Error exporting order details');
-            } else {
-              res.download(filePath, filename, (err) => {
-                // if (err) {
-                //   console.error('Error sending file:', err);
-                //   res.status(500).send('Error exporting order details');
-                // }
-    
-                // Remove the file after it's downloaded
-                fs.unlink(filePath, (err) => {
+  
+            const filename = `order_details_${Date.now()}.csv`;
+            const filePath = path.join(downloadsDir, filename);
+  
+            fs.writeFile(filePath, csvData, 'utf8', (err) => {
+              if (err) {
+                console.error('Error writing CSV file:', err);
+                res.status(500).send('Error exporting order details');
+              } else {
+                res.download(filePath, filename, (err) => {
                   // if (err) {
-                  //   console.error('Error removing file:', err);
+                  //   console.error('Error sending file:', err);
+                  //   res.status(500).send('Error exporting order details');
                   // }
+      
+                  // Remove the file after it's downloaded
+                  fs.unlink(filePath, (err) => {
+                    // if (err) {
+                    //   console.error('Error removing file:', err);
+                    // }
+                  });
                 });
-              });
-            }
+              }
+            });
+  
           });
-
-        });
+        }
       })
       
-    }
-  });
+    
   // downloadLink.click();
 })
 

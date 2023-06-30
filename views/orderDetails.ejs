@@ -12,6 +12,7 @@
           <th>User Name</th>
           <th>Package</th>
           <th>Request_Weight</th>
+          <th>Requests</th>
         </tr>
         <% orderDetails.forEach(function(row) { %>
           <tr>
@@ -20,6 +21,7 @@
             <td><%= user.name %></td>
             <td><%= row.package  %></td>
             <td><%= row.request_weight  %></td>
+            <td><%= row.requests  %></td>
           </tr>
           <% }); %>
       </table>
